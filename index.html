@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    #chat { max-width: 600px; margin: 20px auto; }
+    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
+    #form { display: flex; margin-top: 10px; }
+    #input { flex: 1; padding: 10px; }
+    #send { padding: 10px; }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <div id="messages"></div>
+    <form id="form" action="javascript:void(0);">
+        <input id="input" autocomplete="off" placeholder="Type a message..." />
+        <button id="send" type="submit">Send</button>
+      </form>
+  </div>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+  <script>
+    const socket = io('http://localhost:3000');
+
+    const messagesDiv = document.getElementById('messages');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+
+    // Получение истории сообщений
+    socket.on('chat history', (messages) => {
+      messagesDiv.innerHTML = '';
+      messages.forEach(msg => addMessage(msg));
+    });
+
+    // Обработка новых сообщений
+    socket.on('new message', (msg) => {
+      addMessage(msg);
+    });
+
+    // Отправка нового сообщения
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value) {
+        socket.emit('new message', input.value);
+        input.value = '';
+      }
+    });
+
+    // Функция для добавления сообщения в чат
+    function addMessage(msg) {
+      const item = document.createElement('div');
+      item.textContent = `${new Date(msg.timestamp).toLocaleTimeString()}: ${msg.text}`;
+      messagesDiv.appendChild(item);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>
